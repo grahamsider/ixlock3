@@ -9,7 +9,7 @@
 #   ttf-abel-regular
 #   convert
 
-VERSION="0.1.0"
+VERSION="0.1.1"
 
 OPTS=":hvng:"
 ARG_GEN=0
@@ -115,39 +115,39 @@ lock() {
     [ ! -f "$CONF_FILE_LSI" ] &&
         { echo "error: no cached lockscreen image (generate via '-g')"; exit 1; }
 
-	i3lock -n --force-clock -i "$CONF_FILE_LSI"                 \
-	    --ind-pos="w/2:h/2"                                     \
+    i3lock -n --force-clock -i "$CONF_FILE_LSI"                 \
+        --ind-pos="w/2:h/2"                                     \
         --time-pos="w/2:h/2-5"                                  \
         --date-pos="w/2:h/2+35"                                 \
         --greeter-pos="w/2:h/2"                                 \
                                                                 \
         --ring-color=$COLOR_RING_DEFAULT                        \
-	    --date-color=$COLOR_RING_DEFAULT                        \
+        --date-color=$COLOR_RING_DEFAULT                        \
         --time-color=$COLOR_RING_DEFAULT                        \
         --greeter-color=$COLOR_RING_DEFAULT                     \
         --separator-color=$COLOR_RING_SEP                       \
         --inside-color=$COLOR_RING_INSIDE                       \
-	    --insidever-color=$COLOR_RING_INSIDE                    \
-	    --ringver-color=$COLOR_RING_VERIF                       \
+        --insidever-color=$COLOR_RING_INSIDE                    \
+        --ringver-color=$COLOR_RING_VERIF                       \
         --ringwrong-color=$COLOR_RING_BADLOGIN                  \
         --insidewrong-color=$COLOR_RING_BADLOGIN                \
-	    --keyhl-color=$COLOR_RING_HL                            \
+        --keyhl-color=$COLOR_RING_HL                            \
         --bshl-color=$COLOR_RING_HL                             \
                                                                 \
-	    --time-str="%H | %M"                                    \
+        --time-str="%H | %M"                                    \
         --time-size=40                                          \
-	    --date-str="%a, %d %b"                                  \
+        --date-str="%a, %d %b"                                  \
         --date-size=25                                          \
-	    --greeter-text=""                                       \
+        --greeter-text=""                                       \
         --greeter-size=25                                       \
         --ring-width 2                                          \
         --radius 75                                             \
                                                                 \
-	    --verif-text="" --wrong-text="" --noinput-text=""       \
+        --verif-text="" --wrong-text="" --noinput-text=""       \
         --date-font="Abel" --time-font="Abel"                   \
         --pass-media-keys --pass-screen-keys                    \
         --pass-power-keys --pass-volume-keys                    \
-	    --line-uses-inside --indicator
+        --line-uses-inside --indicator
 }
 
 main() {
