@@ -1,0 +1,159 @@
+#!/bin/sh
+
+# ixlock3: A dead simple i3lock-color wrapper
+#
+# Inspired by mantablockscreen (and some others)
+#
+# Dependencies:
+#   i3lock-color
+#   ttf-abel-regular
+#   convert
+
+VERSION="0.1.0"
+
+OPTS=":hvng:"
+ARG_GEN=0
+ARG_GEN_NOBLUR=0
+ARG_GEN_V=""
+
+CONF_DIR_HOME=${XDG_CONFIG_HOME:-"$HOME/.config"}/ixlock3
+CONF_DIR_BG="$CONF_DIR_HOME/bg"
+CONF_FILE_LSI="$CONF_DIR_BG/lsi-default.png"
+
+# Default color values
+COLOR_RING_DEFAULT="fefefeff"
+COLOR_RING_SEP="00000000"
+COLOR_RING_INSIDE="5f5f5f66"
+COLOR_RING_VERIF="fefefe66"
+COLOR_RING_BADLOGIN="f82a11aa"
+COLOR_RING_HL="39393999"
+
+usage() {
+    echo "Usage: ./ixlock3 [options]
+      -g (generate):   generate and cache lockscreen image
+      -n (no-blur):    skip lockscreen image blur (ignored without '-g')
+      -v (version):    show xdpi version and exit
+      -h (help):       show usage and exit"
+}
+
+version() {
+    echo "ixlock3: version $VERSION"
+    i3lock --version
+}
+
+parse_args() {
+    # Parse loop
+    while getopts "$OPTS" opt; do
+        case "$opt" in
+            g)
+                ARG_GEN=1
+                ARG_GEN_V="$OPTARG"
+                ;;
+            n)
+                ARG_GEN_NOBLUR=1
+                ;;
+            v)
+                version
+                exit 0
+                ;;
+            \?|h)
+                usage
+                exit 0
+                ;;
+            :)
+                case "$OPTARG" in
+                    g)
+                        echo "error: no lockscreen image filepath specified for option '-g'"
+                        exit 1
+                        ;;
+                esac
+                ;;
+         esac
+    done
+    #[ "$OPTIND" -eq "1" ] && usage && exit 0
+    shift $((OPTIND - 1));
+}
+
+exec_args() {
+    [ $ARG_GEN -eq 1 ] && { generate; exit 0; }
+
+    # No argument -- lock
+    lock
+}
+
+check_conf_dir() {
+    [ ! -d  "$CONF_DIR_HOME" ] && { mkdir -p "$CONF_DIR_HOME"; }
+    [ ! -d  "$CONF_DIR_BG" ] && { mkdir -p "$CONF_DIR_BG"; }
+}
+
+generate() {
+    check_conf_dir
+    [ ! -f "$ARG_GEN_V" ] && 
+        { echo "error: cannot access $ARG_GEN_V: no such file"; exit 1; }
+
+    # Make sure we error out if anything fails
+    set -e
+
+    # Convert to PNG if not already (TODO: tolower())
+    if [ "$(echo "$ARG_GEN_V" | sed 's/^.*\.//')" != "png" ]; then
+        convert "$ARG_GEN_V" "$CONF_FILE_LSI"
+    else
+        cp "$ARG_GEN_V" "$CONF_FILE_LSI"
+    fi
+
+    # Add blur (unless -n is specified)
+    if [ $ARG_GEN_NOBLUR -eq 0 ]; then
+        convert "$CONF_FILE_LSI" -filter Gaussian -blur 0x8 "$CONF_FILE_LSI\_tmp"
+        mv "$CONF_FILE_LSI\_tmp" "$CONF_FILE_LSI"
+    fi
+
+    set +e
+}
+
+lock() {
+    check_conf_dir
+    [ ! -f "$CONF_FILE_LSI" ] &&
+        { echo "error: no cached lockscreen image (generate via '-g')"; exit 1; }
+
+	i3lock -n --force-clock -i "$CONF_FILE_LSI"                 \
+	    --ind-pos="w/2:h/2"                                     \
+        --time-pos="w/2:h/2-5"                                  \
+        --date-pos="w/2:h/2+35"                                 \
+        --greeter-pos="w/2:h/2"                                 \
+                                                                \
+        --ring-color=$COLOR_RING_DEFAULT                        \
+	    --date-color=$COLOR_RING_DEFAULT                        \
+        --time-color=$COLOR_RING_DEFAULT                        \
+        --greeter-color=$COLOR_RING_DEFAULT                     \
+        --separator-color=$COLOR_RING_SEP                       \
+        --inside-color=$COLOR_RING_INSIDE                       \
+	    --insidever-color=$COLOR_RING_INSIDE                    \
+	    --ringver-color=$COLOR_RING_VERIF                       \
+        --ringwrong-color=$COLOR_RING_BADLOGIN                  \
+        --insidewrong-color=$COLOR_RING_BADLOGIN                \
+	    --keyhl-color=$COLOR_RING_HL                            \
+        --bshl-color=$COLOR_RING_HL                             \
+                                                                \
+	    --time-str="%H | %M"                                    \
+        --time-size=40                                          \
+	    --date-str="%a, %d %b"                                  \
+        --date-size=25                                          \
+	    --greeter-text=""                                       \
+        --greeter-size=25                                       \
+        --ring-width 2                                          \
+        --radius 75                                             \
+                                                                \
+	    --verif-text="" --wrong-text="" --noinput-text=""       \
+        --date-font="Abel" --time-font="Abel"                   \
+        --pass-media-keys --pass-screen-keys                    \
+        --pass-power-keys --pass-volume-keys                    \
+	    --line-uses-inside --indicator
+}
+
+main() {
+    parse_args "$@"
+    exec_args
+    exit 0
+}
+
+main "$@"
